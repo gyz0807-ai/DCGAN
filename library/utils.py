@@ -53,7 +53,7 @@ class BatchManager():
 
     def next_batch(self, batch_size):
         """
-        Output next batch as (X, y), return None if ran over num_epochs
+        Output next batch, return None if ran over num_epochs
         """
         num_rows = self.train_set.X.shape[0]
 
@@ -71,3 +71,24 @@ class BatchManager():
         if self.current_epoch > self.num_epochs:
             return None
         return selected_X
+
+def gan_predict(model_path, noise_input):
+
+    tf.reset_default_graph()
+
+    with tf.Session() as sess:
+        saver = tf.train.import_meta_graph(model_path+'gan.ckpt.meta')
+        saver.restore(sess, model_path+'gan.ckpt')
+
+        graph = tf.get_default_graph()
+        with graph.as_default():
+            g_input = graph.get_tensor_by_name('noise_inputs:0')
+            g_out = graph.get_tensor_by_name('generator/G_output/Tanh:0')
+
+            preds = sess.run(g_out, feed_dict={
+                g_input:noise_input
+            })
+
+    preds = np.round(preds * 127.5 + 127.5).astype(int)
+
+    return preds

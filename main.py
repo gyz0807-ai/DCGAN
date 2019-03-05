@@ -37,6 +37,9 @@ flags.DEFINE_integer('noise_len', 100,
                      'Length of noise vector')
 flags.DEFINE_integer('sample_freq', 100,
                      'Number of steps between sample pic generations')
+flags.DEFINE_list('input_img_size', [28, 28, 1],
+                  'Size of input image')
+
 
 def main(argv=None):
     log_dir, model_dir = generate_log_model_dirs(

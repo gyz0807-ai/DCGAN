@@ -7,6 +7,7 @@ from library.utils import create_path
 from library.utils import BatchManager
 from library.data_loader import load_data
 from library.utils import train_val_split
+from library.data_loader import load_celeba_files
 
 def discriminator(img_inputs, batch_size, is_train, reuse=False):
 
@@ -49,7 +50,7 @@ def discriminator(img_inputs, batch_size, is_train, reuse=False):
 
     return D_logit_out
 
-def generator(noise_input, is_train, keep_prob, random_state):
+def generator(noise_input, num_channels, is_train, keep_prob, random_state):
 
     with tf.variable_scope('generator'):
         with tf.variable_scope('projection'):
@@ -96,7 +97,7 @@ def generator(noise_input, is_train, keep_prob, random_state):
                 training=is_train, name='G_cnn_3_dropout')
         with tf.variable_scope('G_output'):
             G_cnn_out = tf.layers.conv2d_transpose(
-                G_cnn_3_dropout, 1, [5, 5], [2, 2], 'same',
+                G_cnn_3_dropout, num_channels, [5, 5], [2, 2], 'same',
                 kernel_initializer=tf.initializers.random_normal(
                     stddev=0.02), name='G_cnn_4')
             G_cnn_tanh_out = tf.nn.tanh(G_cnn_out)
@@ -111,14 +112,16 @@ class DCGAN:
         self.model_dir = model_dir
 
     def build_graph(self, config):
+        self.input_img_size = [int(i) for i in config.input_img_size]
         self.img_inputs = tf.placeholder(
-            tf.float32, [config.batch_size, 28, 28, 1], 'img_inputs')
+            tf.float32, [config.batch_size] + self.input_img_size, 'img_inputs')
         self.noise_inputs = tf.placeholder(
             tf.float32, [config.batch_size, 100], 'noise_inputs')
         self.is_train = tf.placeholder_with_default(False, [], name='is_train')
 
         self.g_out = generator(
-            self.noise_inputs, self.is_train, config.keep_prob, config.random_state)
+            self.noise_inputs, self.input_img_size[2], self.is_train,
+            config.keep_prob, config.random_state)
         print('g_out: {}'.format(self.g_out))
 
         img_inputs_resized = tf.image.resize_images(self.img_inputs, [64, 64])
@@ -163,14 +166,17 @@ class DCGAN:
         self.saver = tf.train.Saver()
         self.file_writer = tf.summary.FileWriter(self.log_dir, graph=self.sess.graph)
 
-    def generate_samples(self, samples, epoch, step):
+    def generate_samples(self, samples, epoch, step, config):
         samples_path = self.model_dir+'samples/'
         create_path(samples_path)
         plt.figure(figsize=[12, 12])
         plt.subplots_adjust(wspace=0.02, hspace=0.02)
         for i in range(64):
             plt.subplot(8, 8, i+1)
-            plt.imshow(samples[i][:, :, 0])
+            if config.data_nm == 'mnist':
+                plt.imshow(samples[i][:, :, 0])
+            elif config.data_nm == 'celeba':
+                plt.imshow(samples[i])
             plt.axis('off')
         plt.savefig(samples_path+'sample_epoch{}_{}.png'.format(epoch, step))
 
@@ -180,14 +186,19 @@ class DCGAN:
         self.sess.run(self.init)
 
         print('Loading data...')
-        images, labels = load_data(config.data_nm, load_train=True)
-        train_set = Dataset(images, labels)
-        batch_manager = BatchManager(train_set, config.num_epochs, config.shuffle)
+        images = load_data(config.data_nm, load_train=True)
+        train_set = Dataset(images)
+        batch_manager = BatchManager(
+            train_set, config.num_epochs, config.shuffle, random_state=config.random_state)
 
         print('Training model...')
         np.random.seed(config.random_state)
         while True:
             batch_x = batch_manager.next_batch(config.batch_size)
+            if config.data_nm == 'celeba':
+                batch_files = batch_manager.next_batch(config.batch_size)
+                batch_x = load_celeba_files(batch_files)
+
             noise_input_batch = np.random.uniform(
                 -1, 1, size=[config.batch_size, config.noise_len])
             if batch_x is None:
@@ -215,7 +226,7 @@ class DCGAN:
                 samples = self.sess.run(self.g_out, feed_dict={
                     self.noise_inputs:noise_input_batch})
                 self.generate_samples(
-                    samples, batch_manager.current_epoch, step_counter)
+                    samples, batch_manager.current_epoch, step_counter, config)
 
             self.sess.run(self.d_train, feed_dict={
                 self.img_inputs:batch_x,
