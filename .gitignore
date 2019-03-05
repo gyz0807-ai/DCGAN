@@ -1,0 +1,7 @@
+celeba-dataset
+__pycache__
+.ipynb_checkpoints
+mnist_data
+tf_logs
+tf_models
+*.ipynb
