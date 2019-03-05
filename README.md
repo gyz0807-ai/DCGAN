@@ -10,11 +10,11 @@ python main.py
 
 ## Reseults
 
-epoch 2
-![alt text](https://github.com/gyz0807-ai/DCGAN/blob/master/results/sample_epoch2.png)
+epoch 2  
+<img src="https://github.com/gyz0807-ai/DCGAN/blob/master/results/sample_epoch2.png" width="250" height="250">
 
-epoch 4
-![alt text](https://github.com/gyz0807-ai/DCGAN/blob/master/results/sample_epoch4.png)
+epoch 4  
+<img src="https://github.com/gyz0807-ai/DCGAN/blob/master/results/sample_epoch4.png" width="250" height="250">
 
-epoch 6
-![alt text](https://github.com/gyz0807-ai/DCGAN/blob/master/results/sample_epoch6.png)
+epoch 6  
+<img src="https://github.com/gyz0807-ai/DCGAN/blob/master/results/sample_epoch6.png" width="250" height="250">
