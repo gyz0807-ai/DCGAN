@@ -1,7 +1,7 @@
 # DCGAN
 
 ## Preparation
-Download four MNIST datasets from http://yann.lecun.com/exdb/mnist and put the dataset into ./mnist_data folder.
+Download four MNIST datasets from http://yann.lecun.com/exdb/mnist and put the them into ./mnist_data folder. Download celeba dataset from https://www.kaggle.com/jessicali9530/celeba-dataset/version/2 and put it into ./celeba-dataset/img_align_celeba folder.
 
 ## How to use
 Train on the MNIST dataset
