@@ -5,3 +5,4 @@ mnist_data
 tf_logs
 tf_models
 *.ipynb
+related_materials
